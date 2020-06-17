@@ -25,8 +25,19 @@ function validateProjectId(request, response, next) {
     return next();
 }
 
+function validateProjectIndex(request, response, next) {
+    const {id} = request.params;
+
+    const index = projects.findIndex(project => project.id === id);
+    if (index < 0) {
+        return response.status(400).json({ error: 'Project not found.' });
+    }
+
+    return next();
+}
+
 app.use(logRequests);
-app.use('/projects/:id', validateProjectId);
+app.use('/projects/:id', validateProjectId, validateProjectIndex);
 
 /* Fake Device */
 const projects = [];
@@ -58,11 +69,6 @@ app.post('/projects', (request, response) => {
 
 app.put('/projects/:id', (request, response) => {
     const {id} = request.params;
-    
-    const index = projects.findIndex(project => project.id === id);
-    if (index < 0) {
-        return response.status(400).send({error: "Project not found."})
-    }
 
     const {title, owner} = request.body;
     const project = {
@@ -71,6 +77,7 @@ app.put('/projects/:id', (request, response) => {
         owner
     }
 
+    const index = projects.findIndex(project => project.id === id);
     projects[index] = project;
 
     return response.json(project);
@@ -80,10 +87,6 @@ app.delete('/projects/:id', (request, response) => {
     const {id} = request.params;
 
     const index = projects.findIndex(project => project.id === id);
-    if (index < 0) {
-        return response.status(400).send({error: "Project not found."})
-    }
-
     projects.splice(index, 1);
 
     return response.status(204).send();
